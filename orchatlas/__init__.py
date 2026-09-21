@@ -1,3 +1,3 @@
-"""OrchAtlas: local configuration tools, with no inference client."""
+"""OrchAtlas: coordinated Codex and OpenCode workflows with local run records."""
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"

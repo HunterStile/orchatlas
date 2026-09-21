@@ -1,5 +1,9 @@
 # Main team: Astra + DeepSeek V4.1 Flash
 
+The intended primary workflow is now the **combined OrchAtlas runtime**: Codex uses ChatGPT authentication for Astra planning/review and OpenCode uses the existing OpenRouter connection for `openrouter/deepseek/deepseek-v4.1-flash` implementation. Start the interactive terminal with `orchatlas --project PATH`; it detects existing connections and validates the OpenRouter key. It requires neither a router in Codex nor OpenAI credentials in OpenCode. See [runtime usage](../RUNTIME.md).
+
+The matrix and router instructions below describe the **optional legacy exports**, in which a user manually operated one client at a time. They are not prerequisites for a combined run.
+
 Maintainer selection as of 2026-09-21. Recipe: `astra-flash@0.1.0`; catalog: `2026.09.21.2`. This is a chosen starting team, not a benchmark winner.
 
 | Role | Responsibility | Codex model | OpenCode model |

@@ -14,7 +14,7 @@ Una ricerca web esatta per `OrchAtlas` non ha restituito risultati. La ricerca G
 
 Descrizione proposta per GitHub:
 
-> Versioned orchestration recipes for Codex and OpenCode. Choose models per role, preview configuration changes, and roll back safely.
+> Run Codex and OpenCode together from one interactive CLI. Choose models per role, save work, and independently review the result.
 
 Tagline proposta:
 
@@ -33,7 +33,7 @@ Il ruolo pubblico del maintainer è riconoscibile: provare combinazioni, spiegar
 - Licenza del nuovo progetto e attribuzioni pertinenti a ogni parte riutilizzata.
 - Release numerata, changelog, risultati CI e artefatti riproducibili.
 
-Topics iniziali: `agent-orchestration`, `ai-agents`, `codex`, `opencode`, `developer-tools`, `model-routing`. Aggiungere `benchmarks` quando esistono misurazioni pubbliche. Il README distingue la generazione di configurazioni disponibile nel MVP dall'esecuzione reale ancora da verificare.
+Topics iniziali: `agent-orchestration`, `ai-agents`, `codex`, `opencode`, `developer-tools`, `model-routing`. Aggiungere `benchmarks` quando esistono misurazioni pubbliche. La v0.2.0 introduce l'esecuzione combinata, verificata su un piccolo task reale in Windows; confronti prestazionali e prove live su altri sistemi restano da completare.
 
 ## Crescita basata sul progetto
 
@@ -43,4 +43,4 @@ Favorire contributi riproducibili: report di incompatibilità con versioni, task
 
 ## Stato della pubblicazione
 
-La repository pubblica è [HunterStile/orchatlas](https://github.com/HunterStile/orchatlas). Contiene analisi, proposta e un primo MVP di configurazione/installazione per entrambi gli host, con licenza MIT e CI su tre sistemi operativi. Gli artefatti numerati sono distribuiti tramite [GitHub releases](https://github.com/HunterStile/orchatlas/releases); non è stato pubblicato un pacchetto su PyPI. La v0.1.0 viene presentata come prerelease di configurazione, senza risultati di inferenza o benchmark.
+La repository pubblica è [HunterStile/orchatlas](https://github.com/HunterStile/orchatlas), con licenza MIT e CI su tre sistemi operativi. La v0.2.0 è una prerelease del CLI interattivo: Codex orchestra e revisiona, mentre OpenCode implementa tramite OpenRouter. Le esportazioni di configurazione delle versioni precedenti restano disponibili. Gli artefatti numerati sono distribuiti tramite [GitHub releases](https://github.com/HunterStile/orchatlas/releases); non è stato pubblicato un pacchetto su PyPI. Le prove live documentate verificano un task circoscritto e non costituiscono un benchmark.

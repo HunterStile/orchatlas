@@ -1,154 +1,152 @@
 # OrchAtlas
 
-[![Tests](https://github.com/HunterStile/orchatlas/actions/workflows/tests.yml/badge.svg)](https://github.com/HunterStile/orchatlas/actions/workflows/tests.yml)
+**One task. Codex and OpenCode working together.**
 
-**Choose your models. Version your orchestration.**
+OrchAtlas is a standalone local orchestrator. It starts **Codex in the background for GPT-6 Astra planning and review through your ChatGPT subscription**, and **OpenCode in the background for DeepSeek V4.1 Flash implementation through OpenRouter**. You submit a task to OrchAtlas; it manages the handoffs, saves progress and returns a reviewed result.
 
-Versioned orchestration recipes for **Codex and OpenCode**. Choose the models for planning, building and reviewing, then generate the native agents and workflow for your project.
+**v0.2.0 — interactive orchestration prerelease.** Open a terminal, choose your team with `/model`, and give OrchAtlas a task. The earlier configuration-export commands remain available. [Release notes and downloads](https://github.com/HunterStile/orchatlas/releases/tag/v0.2.0).
 
-**v0.1.1 — local configuration MVP.** The CLI works offline and uses Python 3.11+ with no runtime dependencies. It does not send prompts, store API keys or run its own agent loop. All starter recipes are **unbenchmarked**; no model combination is presented as a measured winner.
+~~~mermaid
+flowchart LR
+    User[Your task] --> Atlas[OrchAtlas]
+    Atlas --> Plan[Codex / Astra: plan]
+    Plan --> Build[OpenCode / DeepSeek: implement and save]
+    Build --> Review[Codex / Astra: review]
+    Review -->|Corrections| Build
+    Review -->|Accepted| Result[Saved files and report]
+~~~
 
-The current main team is **GPT-6 Astra for orchestration and review, with DeepSeek V4.1 Flash for implementation**. Astra defines and accepts the task; a Flash builder writes the files, tests and corrections; a separate Astra reviewer checks the patch. [Exact IDs and provider prerequisites](docs/teams/astra-flash.md).
+## Open the interactive terminal
 
-## Try it
+Requirements: Python 3.11+, Codex CLI, OpenCode CLI, access to Astra through your ChatGPT account, and an OpenRouter API key connected in OpenCode. The terminal uses `prompt-toolkit` for editing/completion/history and `rich` for progress and display.
 
-Clone the repository, then try the CLI without installing dependencies:
+Install from source once. On Windows, the installer also adds Python's user commands directory to your user PATH:
 
-```sh
+~~~powershell
 git clone https://github.com/HunterStile/orchatlas.git
 cd orchatlas
-python -m orchatlas recipes
-python -m orchatlas models
-mkdir ../orchatlas-demo
-python -m orchatlas init --project ../orchatlas-demo
-python -m orchatlas preview --project ../orchatlas-demo
-python -m orchatlas apply --project ../orchatlas-demo
-```
+.\scripts\install-local.ps1
+~~~
 
-Both hosts and `astra-flash@0.1.0` are selected by default. Use `--host codex` or `--host opencode` at initialization for only one. The main team requires OpenAI and DeepSeek access; **Codex additionally requires a configured external route such as Codex Router**. OrchAtlas does not install or authenticate these providers. For inherited host models, explicitly choose `--recipe lean` or `--recipe reviewed`.
+Open a new terminal, enter your project directory and type:
 
-To use the CLI outside this checkout, install the local package:
+~~~sh
+orchatlas
+~~~
 
-```sh
-python -m pip install .
-orchatlas --help
-```
+Or choose an existing project explicitly: `orchatlas --project /path/to/project`. Other platforms can install with `python -m pip install -e .` in an activated virtual environment; `python -m orchatlas` opens the same interface. A wheel and source archive are also available in the [GitHub release](https://github.com/HunterStile/orchatlas/releases/tag/v0.2.0). Install a downloaded wheel with `python -m pip install ./orchatlas-0.2.0-py3-none-any.whl` in your Python environment. No package has been published to PyPI.
 
-The installed `orchatlas` and `python -m orchatlas` expose the same interface. There is no published PyPI package or remote installer in this release.
+~~~text
+atlas > /model
+atlas > Crea una pagina web per gestire attività e verifica che funzioni
+atlas > Aggiungi un filtro per le attività completate
+atlas > /diff
+~~~
 
-Versioned wheels are available from [GitHub releases](https://github.com/HunterStile/orchatlas/releases). Download a wheel and install its local path with `python -m pip install path/to/orchatlas-0.1.1-py3-none-any.whl`.
+Plain text starts a task or continues an unfinished task. Follow-up tasks carry bounded context from the conversation. `/model` offers role and model selection using the clients' current catalogs; `/model orchestrator gpt-6-astra high` selects directly. Choices are saved in the project manifest for new tasks. Resumed tasks retain their saved team.
 
-## Choose your models
+Use `/help` for all commands: `/model`, `/models`, `/effort`, `/status`, `/doctor`, `/setup`, `/login`, `/new`, `/sessions`, `/session`, `/runs`, `/resume`, `/diff`, `/report`, `/project`, `/timeout`, `/clear`, `/exit`. Tab completes commands; Up/Down recall input; Ctrl+R searches history; Alt+Enter inserts a newline. Ctrl+C stops a task and returns to the prompt with files and checkpoints retained.
 
-Use exact IDs available to your host/account. These are syntax examples, not benchmark recommendations:
+The terminal shows the active phase, elapsed time and tool-status events. This is an interactive CLI over the combined runtime; images, native-client slash-command passthrough and token-by-token model text are not implemented. [Interactive terminal guide](docs/INTERACTIVE.md).
 
-```sh
-orchatlas set codex.planner gpt-5.6 --effort high --project ../orchatlas-demo
-orchatlas set codex.builder gpt-5.6-terra --effort medium --project ../orchatlas-demo
-orchatlas set opencode.builder openai/gpt-5.2 --effort medium --project ../orchatlas-demo
-orchatlas preview --project ../orchatlas-demo --diff
-orchatlas apply --project ../orchatlas-demo
-```
+## Authentication and one-shot commands
 
-Choose `inherit` to return a role to the host default. Changing a model clears its previous effort unless you explicitly supply a new one. Codex effort is emitted as `model_reasoning_effort`; OpenCode effort maps to `reasoningEffort` only for `openai/` in this MVP. Other provider-specific reasoning options are not translated.
+On interactive startup OrchAtlas detects the existing Codex ChatGPT login and asks OpenCode for its configured OpenRouter connection. It validates the effective key with OpenRouter's authenticated `/api/v1/key` endpoint without a model request. Existing valid logins are reused. Missing connections offer native login; `/setup` repeats detection. Secrets remain in the native credential store and are never written to project settings, prompt history or reports.
 
-Custom model IDs are accepted with an unverified warning. `models` lists documentation examples, not the live account catalog. External Codex routes require a separately configured provider/router and appropriate subagent support. Model discovery is not proof that inference or tool use works.
+If a connection is missing, sign in once through the official clients:
 
-## Start the workflow
+~~~sh
+python -m orchatlas login codex
+python -m orchatlas login openrouter
+~~~
 
-Change into the target project. The generated `.orchatlas/START.md` contains commands reflecting the selected planner model.
+The first command opens Codex's ChatGPT login. The second invokes OpenCode's OpenRouter login. Credentials remain in the respective client's store; OrchAtlas does not ask for an OpenAI API key or copy authentication tokens into project files.
 
-For Codex, start a fresh session using the generated command, then request:
+Choose an existing project directory and check readiness:
 
-```text
-$orchatlas Implement the feature described in docs/spec.md.
-```
+~~~sh
+python -m orchatlas doctor --project /path/to/project
+~~~
 
-For OpenCode:
+Then give OrchAtlas a task:
 
-```sh
-opencode --agent orchatlas
-```
+~~~sh
+python -m orchatlas run "Implement the feature in docs/spec.md and verify it" --project /path/to/project
+~~~
 
-Describe your task to the primary agent. Both hosts run their own native agent loop. Codex and OpenCode are alternative hosts for a project, not two processes launched together by OrchAtlas.
+For a new Windows demo project, from the OrchAtlas checkout:
 
-## Starter workflows
+~~~powershell
+New-Item -ItemType Directory -Path demo
+python -m orchatlas doctor --project demo
+python -m orchatlas run "Create a small task-list web page and test its behavior" --project demo
+~~~
 
-| Recipe | Flow | Review ownership |
-| --- | --- | --- |
-| `astra-flash@0.1.0` **(default)** | Astra plan → Flash implementation → Astra review → Astra acceptance | Separate Astra reviewer; Astra coordinator accepts |
-| `lean@0.1.0` | Plan → one builder → acceptance | Coordinator |
-| `reviewed@0.1.0` | Plan → one builder → separate reviewer → acceptance | Reviewer supplies findings; coordinator accepts |
+There is no need to open a separate Codex/OpenCode terminal or run `init` and `apply` before a combined run. The processes run while OrchAtlas is active and are closed when the run ends or is interrupted. This is a foreground CLI supervising background clients, not a detached system service.
 
-One writer is active at a time. A workflow defines correction rounds and evidence to return; those instructions are not a hard runtime budget or scheduler.
+## The team
 
-Existing projects keep their current snapshot and model choices. To adopt the main team explicitly:
+| Role | Execution client | Model | Authentication |
+| --- | --- | --- | --- |
+| Planner / orchestrator | Codex app-server | `gpt-6-astra` | ChatGPT subscription |
+| Implementation worker | OpenCode local server | `openrouter/deepseek/deepseek-v4.1-flash` | OpenRouter API |
+| Independent reviewer | Codex app-server, separate thread | `gpt-6-astra` | ChatGPT subscription |
 
-```sh
-orchatlas use astra-flash@0.1.0 --with-models --project ../orchatlas-demo
-orchatlas preview --project ../orchatlas-demo
-orchatlas apply --project ../orchatlas-demo
-```
+Codex plans and reviews with a read-only filesystem sandbox. OpenCode owns implementation and saves changes in the selected project. A review can send corrections back to the same worker session, up to the recipe's correction limit. Exhausted corrections produce a blocked run, not a false success.
 
-Switch recipes while retaining model choices:
+The combined runtime needs neither a DeepSeek router inside Codex nor an OpenAI provider connection inside OpenCode. It checks subscription authentication before Codex turns and stops if the configured model/provider changes. Account availability and quotas still apply. [Official OpenAI authentication](https://learn.chatgpt.com/docs/auth), [Codex app-server](https://learn.chatgpt.com/docs/app-server), [OpenCode server](https://opencode.ai/docs/server/).
 
-```sh
-orchatlas use lean@0.1.0 --project ../orchatlas-demo
-orchatlas preview --project ../orchatlas-demo
-orchatlas apply --project ../orchatlas-demo
-```
+The worker uses the exact OpenRouter model ID `deepseek/deepseek-v4.1-flash`, prefixed by `openrouter/` in OpenCode. [OpenRouter model](https://openrouter.ai/deepseek/deepseek-v4.1-flash).
 
-## Files and reversibility
+## Progress and continuation
 
-`orchatlas.json` is the editable source. Its recipe snapshot prevents silent changes after catalog updates. `.orchatlas/lock.json` records the compiler version, manifest and generated-file hashes.
+Files are saved directly in the target project. Private run state, the initial workspace snapshot, session IDs, events and `REPORT.md` are stored under `.orchatlas/local/runs/<run-id>/`, ignored by Git.
 
-| Destination | Content |
-| --- | --- |
-| `.agents/skills/orchatlas/SKILL.md` | Shared skill, discovered by both hosts |
-| `.codex/agents/orchatlas_*.toml` | Codex builder and optional reviewer |
-| `.opencode/agents/orchatlas*.md` | OpenCode primary, builder and optional reviewer |
-| `.orchatlas/START.md` | Project-specific launch instructions |
-| `.orchatlas/local/` | Ignored state, transaction lock and undo receipts |
+~~~sh
+python -m orchatlas runs --project /path/to/project
+python -m orchatlas run --resume RUN_ID --project /path/to/project
+python -m orchatlas run --resume RUN_ID --note "Use SQLite for storage" --project /path/to/project
+~~~
 
-Existing `AGENTS.md`, `.codex/config.toml`, `opencode.json[c]`, credentials and unrelated agents remain untouched. Existing unowned files at generated destinations cause an error. Modified or deleted managed files also block updates and undo, preserving later edits.
+Ctrl+C stops the owned background processes and retains saved files and progress. Resume continues from the recorded phase without resetting your workspace. Completed runs cannot be resumed; start a new task for follow-up work. A killed process or power loss may leave a lock requiring inspection; see [runtime behavior and recovery](docs/RUNTIME.md).
 
-```sh
-orchatlas status --project ../orchatlas-demo
-orchatlas undo --project ../orchatlas-demo
-orchatlas undo --project ../orchatlas-demo --apply
-```
+The initial snapshot distinguishes pre-existing work from changes made during the run. Later manual edits are retained and included in review. Snapshots are review evidence, not an automatic rollback mechanism.
 
-Undo reverses one applied transaction, newest first. It preserves `orchatlas.json`, unrelated files and receipts. A removed host or reviewer removes only unchanged, previously managed generated files during the next apply.
+Existing client permission policies still apply. OpenCode permission requests are forwarded to an interactive OrchAtlas terminal for one-time approval. Without an interactive terminal, a request blocks the run rather than being silently approved. `--json` sends progress events to stderr and a final structured result to stdout.
 
-Writes are atomic **per file** and ordinary failures roll back completed writes. This is not a crash-proof filesystem transaction; see [recovery and limits](docs/MVP.md#recovery-and-limits). Backups remain ignored after uninstalling generated files.
+## Choose models and maintain recipes
 
-## Maintain your catalog
+Without a manifest, the combined runtime uses Astra plus DeepSeek Flash via OpenRouter. The historical exporter recipe snapshots retain their original routes. `/model` saves the chosen runtime team directly; the older explicit configuration commands are also available:
 
-Edit the human-readable [recipe catalog](orchatlas/data/recipes.json) and [model examples](orchatlas/data/models.json). The catalog's optional `default_recipe` selects the exact `id@version` used by `init` when no recipe is specified. Distribute a separate recipe catalog without changing the CLI:
+~~~sh
+python -m orchatlas init --project /path/to/project
+python -m orchatlas set codex.planner gpt-6-astra --effort high --project /path/to/project
+python -m orchatlas set codex.reviewer gpt-6-astra --effort high --project /path/to/project
+python -m orchatlas set opencode.builder openrouter/deepseek/deepseek-v4.1-flash --project /path/to/project
+~~~
 
-```sh
-orchatlas recipes --catalog ./my-recipes.json
-orchatlas use my-team@1.0.0 --catalog ./my-recipes.json --project ../orchatlas-demo
-```
+For combined runs, those three settings determine the team. `codex.builder` and the OpenCode planner/reviewer fields belong to the optional per-client exports. Model changes take effect on new runs; resuming a run uses its saved team.
 
-The new recipe is copied into the manifest; application remains a separate step. By default `use` preserves model choices. Add `--with-models` to also adopt the maintainer's model defaults. `init` uses those defaults automatically for a new project. [Example catalog with models for both hosts](examples/recipes.json). Historical versions can coexist; select `id@version` when an ID is ambiguous. See [maintainer guidance](CONTRIBUTING.md).
+The [recipe catalog](orchatlas/data/recipes.json) controls model defaults and correction rounds. Its `default_recipe` selects the main team for new manifests. [Maintainer guidance](CONTRIBUTING.md) explains versioned snapshots and explicit adoption of model changes. Recipes remain **unbenchmarked**.
 
-## Validation
+## Optional configuration exports
 
-```sh
+The earlier `preview`, `apply`, `status` and `undo` commands remain available for manually operating one client. They generate native agents and a shared skill; they do not start the combined runtime. [Configuration export documentation](docs/MVP.md).
+
+`undo` reverses configuration exports only. It does not undo implementation changes made by a model.
+
+## Validation and background
+
+~~~sh
 python -m unittest discover -s tests -v
-```
+~~~
 
-Tests cover both adapters, model/effort validation, deterministic output, recipe pinning, collisions, drift, rollback and stacked undo. [Validation evidence](docs/VALIDATION.md) distinguishes unit/CLI tests, actual host configuration loading and live inference.
+[Validation evidence](docs/VALIDATION.md) separates protocol fixture tests, real client readiness checks and live model execution. A small live task completed planning, actual file writing through OpenRouter and independent review, including continuation from a saved run.
 
-Codex artifacts follow the [official OpenAI documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents). OpenCode artifacts follow its [agent configuration](https://opencode.ai/docs/agents/) and [skill discovery](https://opencode.ai/docs/skills/). Host configuration and policies can override generated settings; a valid file does not imply account access or routing compatibility.
-
-## Background
-
-- [MVP scope and limits](docs/MVP.md)
+- [Runtime and recovery](docs/RUNTIME.md)
+- [Team selection](docs/teams/astra-flash.md)
+- [Architecture decision](docs/adr/0001-orchatlas-owns-the-combined-runtime.md)
 - [Original repository analysis, Italian](docs/research/astra-flash-analysis.md)
 - [Ecosystem research, Italian](docs/research/ecosystem.md)
-- [Product blueprint, Italian](docs/blueprint.md)
-- [Launch plan, Italian](docs/launch-plan.md)
 
-Inspired by [Astra Flash Orchestrator](https://github.com/ethanplusai/astra-flash-orchestrator). This MVP is an original implementation; upstream code is not bundled. Independent of OpenAI, OpenCode, DeepSeek and Codex Router. Licensed under [MIT](LICENSE).
+Inspired by [Astra Flash Orchestrator](https://github.com/ethanplusai/astra-flash-orchestrator). Original implementation; upstream code is not bundled. Independent of OpenAI, OpenCode and DeepSeek. [MIT license](LICENSE).

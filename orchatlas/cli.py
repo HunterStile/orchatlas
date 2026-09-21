@@ -1,10 +1,11 @@
-"""Command-line interface. No command sends prompts or handles API keys."""
+"""One CLI for the combined runtime and optional legacy configuration exports."""
 
 from __future__ import annotations
 
 import argparse
 import difflib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -17,10 +18,15 @@ from .storage import (apply, checked_path, plan, read_bytes, save_manifest, stat
 
 
 def parser() -> argparse.ArgumentParser:
-    root = argparse.ArgumentParser(prog="orchatlas", description="Versioned model teams for Codex and OpenCode. Configuration only; no inference.")
+    root = argparse.ArgumentParser(prog="orchatlas", description="Coordinate Codex and OpenCode together from one application.")
     root.add_argument("--version", action="version", version=f"OrchAtlas {__version__}")
-    commands = root.add_subparsers(dest="command", required=True)
+    root.add_argument("--project", type=Path, default=Path.cwd(), help="project for the interactive terminal")
+    commands = root.add_subparsers(dest="command")
     for name, help_text in (
+        ("run", "Run a task: Codex plans/reviews, OpenCode implements in the background"),
+        ("doctor", "Check both background clients and authentication without inference"),
+        ("runs", "List saved runs in this project"),
+        ("login", "Sign in through the official client; credentials stay with that client"),
         ("recipes", "List bundled or maintainer-supplied workflows"),
         ("models", "List documented model examples, not account availability"),
         ("init", "Create a project manifest without overwriting an existing one"),
@@ -34,8 +40,8 @@ def parser() -> argparse.ArgumentParser:
     ):
         command = commands.add_parser(name, help=help_text)
         command.add_argument("--json", action="store_true", help="machine-readable result")
-        if name not in ("recipes", "models"):
-            command.add_argument("--project", type=Path, default=Path.cwd(), help="existing project directory (default: current directory)")
+        if name not in ("recipes", "models", "login"):
+            command.add_argument("--project", type=Path, default=argparse.SUPPRESS, help="existing project directory (default: current directory)")
         if name in ("recipes", "init", "use"):
             command.add_argument("--catalog", type=Path, help="local versioned recipe catalog; never downloaded automatically")
         if name in ("models", "init"):
@@ -56,6 +62,13 @@ def parser() -> argparse.ArgumentParser:
             command.add_argument("--diff", action="store_true", help="include unified file diffs")
         if name == "undo":
             command.add_argument("--apply", action="store_true", help="perform the restoration")
+        if name == "run":
+            command.add_argument("task", nargs="?", help="implementation task, quoted as one argument")
+            command.add_argument("--resume", metavar="RUN_ID", help="continue a saved run without resetting project files")
+            command.add_argument("--note", help="additional user instructions for a resumed run")
+            command.add_argument("--timeout", type=int, default=900, help="seconds allowed per model stage (default: 900)")
+        if name == "login":
+            command.add_argument("client", choices=("codex", "openrouter", "deepseek"))
     return root
 
 
@@ -78,6 +91,16 @@ def change_summary(changes: list, include_diff: bool = False) -> list[dict]:
 
 
 def run(args: argparse.Namespace) -> dict:
+    if args.command == "login":
+        from .clients import executable
+        if args.json:
+            raise AtlasError("Login is interactive; omit --json and use the native client's prompts.")
+        command = (executable("codex") + ["login"] if args.client == "codex" else
+                   executable("opencode") + ["--pure", "auth", "login", "--provider", args.client])
+        result = subprocess.run(command)
+        if result.returncode:
+            raise AtlasError("Native client login did not complete.")
+        return {"status": "login-finished", "next": "Run orchatlas doctor in your project to verify the selected team."}
     if args.command == "recipes":
         return recipe_catalog(args.catalog)
     if args.command == "models":
@@ -88,6 +111,33 @@ def run(args: argparse.Namespace) -> dict:
     project = checked_path(args.project)
     if not project.is_dir():
         raise AtlasError("The project directory must already exist.")
+    if args.command == "runs":
+        from .runstore import list_runs
+        return {"status": "saved-runs", "runs": list_runs(project)}
+    if args.command in ("run", "doctor"):
+        from . import runtime
+
+        def event(kind, data):
+            if args.json:
+                print(json.dumps({"event": kind, **data}), file=sys.stderr, flush=True)
+            elif kind == "stage":
+                print(f"OrchAtlas | {data['stage']}", flush=True)
+            elif kind == "session":
+                print(f"  {data['role']}: {data['client']} / {data['model']}", flush=True)
+            elif kind == "run":
+                print(f"Run: {data['run_id']}", flush=True)
+
+        def approve(request):
+            details = json.dumps(request.get("patterns", []), ensure_ascii=True)
+            answer = input(f"OpenCode requests {request['permission']}: {details}\nAllow once? [y/N] ")
+            return answer.strip().lower() in ("y", "yes", "s", "si")
+
+        if args.command == "doctor":
+            return runtime.doctor(project, emit=event)
+        if args.note and not args.resume:
+            raise AtlasError("--note requires --resume; include initial instructions in the task.")
+        return runtime.run(project, args.task, resume=args.resume, note=args.note, timeout=args.timeout,
+                           emit=event, approve=approve if sys.stdin.isatty() and not args.json else None)
     if args.command == "init":
         hosts = HOSTS if args.host == "both" else (args.host,)
         config = new_config(args.recipe, hosts, recipe_catalog(args.catalog))
@@ -98,7 +148,7 @@ def run(args: argparse.Namespace) -> dict:
             set_model(config, selector, model)
         save_manifest(project, config)
         return {"status": "created", "path": "orchatlas.json", "recipe": config["recipe"]["id"],
-                "hosts": list(config["hosts"]), "next": "Run orchatlas preview, then orchatlas apply in the project."}
+                "hosts": list(config["hosts"]), "next": "Run orchatlas doctor, then orchatlas run for a combined task. Use preview/apply only for configuration exports."}
     if args.command == "set":
         path = checked_path(project, "orchatlas.json")
         before = read_bytes(path)
@@ -106,7 +156,7 @@ def run(args: argparse.Namespace) -> dict:
         set_model(config, args.role, args.model, args.effort)
         save_manifest(project, config, before)
         return {"status": "configured", "role": args.role, "model": args.model,
-                "warnings": validate(config), "next": "Preview and apply to update generated host files."}
+                "warnings": validate(config), "next": "New combined runs use these settings. Preview/apply updates optional host exports."}
     if args.command == "use":
         path = checked_path(project, "orchatlas.json")
         before = read_bytes(path)
@@ -120,7 +170,7 @@ def run(args: argparse.Namespace) -> dict:
         save_manifest(project, config, before)
         return {"status": "configured", "recipe": config["recipe"]["id"] + "@" + config["recipe"]["version"],
                 "next": ("Recipe model defaults selected." if args.with_models else "Model choices are preserved.")
-                         + " Preview and apply the new recipe."}
+                         + " New combined runs use this recipe; preview/apply updates optional host exports."}
     if args.command == "status":
         report = status(project)
         manifest = checked_path(project, "orchatlas.json")
@@ -172,6 +222,16 @@ def print_result(result: dict, as_json: bool) -> None:
             print(f"  {model['host']:8} {model['model']}")
         return
     print(f"OrchAtlas | {result.get('status', 'installed' if result.get('installed') else 'not installed')}")
+    for client, check in result.get("checks", {}).items():
+        if isinstance(check, dict):
+            print(f"  {client}: {'ready' if check.get('ready') else 'blocked'}")
+            if check.get("reason"):
+                print("    " + check["reason"])
+    for saved in result.get("runs", []):
+        print(f"  {saved['id']}  {saved['status']}  {saved['stage']}")
+    for key in ("run_id", "report", "reason", "summary"):
+        if result.get(key):
+            print(f"  {key}: {result[key]}")
     for change in result.get("changes", []):
         print(f"  {change['action'].upper():6} {change['path']}")
         if change.get("diff"):
@@ -193,14 +253,25 @@ def print_result(result: dict, as_json: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Redirected Windows terminals otherwise encode model names and Italian text
+    # with a legacy code page, breaking UTF-8 consumers and saved transcripts.
+    for stream in (sys.stdout, sys.stderr):
+        if not stream.isatty() and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     args = parser().parse_args(argv)
     try:
+        if args.command is None:
+            try:
+                from .interactive import start
+            except ImportError:
+                raise AtlasError("Install the interactive terminal dependencies: python -m pip install -e .") from None
+            return start(args.project)
         result = run(args)
         print_result(result, args.json)
-        return 0
+        return 130 if result.get("status") == "cancelled" else 2 if result.get("status") in ("blocked", "failed") else 0
     except (AtlasError, OSError) as exc:
         message = str(exc) if isinstance(exc, AtlasError) else f"Local filesystem operation failed ({type(exc).__name__})."
-        if args.json:
+        if getattr(args, "json", False):
             print(json.dumps({"status": "error", "message": message}), file=sys.stderr)
         else:
             print("OrchAtlas: " + message, file=sys.stderr)

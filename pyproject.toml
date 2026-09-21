@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orchatlas"
-version = "0.1.1"
-description = "Versioned orchestration recipes for Codex and OpenCode"
+version = "0.2.0"
+description = "Coordinated Codex and OpenCode workflows with versioned team recipes"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{name = "OrchAtlas contributors"}]
-dependencies = []
+dependencies = ["prompt-toolkit>=3.0.48,<4", "rich>=13.9,<15"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",

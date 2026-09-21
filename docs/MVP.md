@@ -1,4 +1,6 @@
-# OrchAtlas 0.1.1
+# Configuration exports — published OrchAtlas 0.1.1
+
+This document covers the earlier per-client configuration exporter. The standalone combined runtime introduced in v0.2.0 is described in [RUNTIME.md](RUNTIME.md). Its `run`, `doctor`, `runs` and `login` commands are separate from the export commands below.
 
 This release implements a local recipe compiler and guarded installer for Codex and OpenCode. It creates native agents and a discoverable skill; the selected host executes the workflow after the user starts a session.
 
@@ -19,7 +21,7 @@ All commands accept `--json`. Project commands accept `--project PATH` after the
 | `status` | Report installation, drift and pending changes |
 | `undo [--apply]` | Preview or reverse the latest applied transaction |
 
-No command sends model requests, installs a host, changes authentication, publishes a repository or executes a task. Apply writes only fixed project-local destinations and transaction data.
+None of these export commands sends model requests, installs a host, changes authentication, publishes a repository or executes a task. Apply writes only fixed project-local destinations and transaction data.
 
 ## Model choices
 

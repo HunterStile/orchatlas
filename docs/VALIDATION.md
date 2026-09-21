@@ -1,5 +1,23 @@
 # Validation evidence
 
+## v0.2.0 combined runtime and interactive terminal
+
+On 2026-09-22, **all 86 tests passed in the full release suite** on Windows / Python 3.12. Protocol fixtures use real subprocess JSON messaging and authenticated loopback HTTP; the upstream key-validation tests mock only the external OpenRouter endpoint. No test-suite call uses personal credentials or paid inference.
+
+The checks cover saved conversations and bounded follow-up context, multiline keyboard input, Ctrl+C returning to the prompt, command completion, exact model selection, configuration persistence, both client protocols, independent review, correction limits, malformed results, permissions, model substitution, cancellation/resume, timeout, concurrent edits, secret redaction and process cleanup.
+
+### Live local evidence
+
+- Codex 0.155.1 detects the existing ChatGPT login and `gpt-6-astra`; returned threads confirm OpenAI routing and a read-only sandbox.
+- OpenCode 1.18.31 detects the already configured **OpenRouter** connection and the exact `deepseek/deepseek-v4.1-flash` model. Its effective key was verified at OpenRouter's authenticated `/api/v1/key` endpoint, without inference or credential persistence in project files.
+- The installed `orchatlas.exe` opened the interactive shell in a scratch project. Astra planned a one-file task, DeepSeek V4.1 Flash through OpenRouter wrote `hello.txt`, and Astra independently reviewed the saved file. A strict review-result check initially rejected a contradictory response that combined acceptance with nonblocking findings. After clarifying that contract, the saved review was resumed and the run completed with checks and no blocking findings. The final file was independently asserted to contain exactly `OrchAtlas OK` followed by LF.
+- The initial direct-DeepSeek route returned HTTP 401 because it was the wrong route for the user's OpenRouter credential. The default combined route, demo manifest and the user's interrupted planning run were corrected to OpenRouter. No new login was required; the existing native credential was reused.
+- The Windows installer registered the editable source checkout and `orchatlas.exe` in the user's Python scripts directory and user PATH. The v0.2.0 wheel was separately installed and its version, interactive shell and console entry point checked outside the source checkout.
+
+This live smoke task verifies authentication, routing, actual file saving, review and continuation on a small example. It is not a benchmark or a claim of parity with every Codex/OpenCode feature. The v0.2.0 release includes a wheel, source archive and SHA-256 checksums; archive contents were checked to exclude demo projects, credentials and local session state. Current automation is available in the [CI workflow](https://github.com/HunterStile/orchatlas/actions/workflows/tests.yml). The historical CI run linked below belongs to the earlier configuration exporter.
+
+## Published exporter evidence
+
 Date: 2026-09-21. Local platform: Windows, Python 3.12.4.
 
 Local result for v0.1.1: **46 tests passed**, no skips. The installed v0.1.1 wheel completed default-team init → apply → status outside the source checkout, generating nine files with no drift or pending changes. The existing local demo was explicitly migrated to `astra-flash@0.1.0` with its model defaults and also has no drift or pending changes.
@@ -35,9 +53,9 @@ GitHub Actions passed all six jobs on Windows, Linux and macOS with Python 3.11 
 
 ## Remaining acceptance work
 
-- Run a real implementation and review with recorded host/provider identity on each host.
+- Expand live combined-runtime validation to Linux and macOS and to larger implementation tasks.
 - Measure identical tasks across model teams, including failures and coordination cost.
 - Verify additional provider-specific effort mappings and account availability.
 - Expand filesystem coverage for real symlinks, Windows reparse points and process interruption.
 
-The CLI's `static-valid` result and lock file deliberately keep `runtime_verified: false`. Neither a passing suite nor a discovered agent changes that claim.
+The configuration exporter's `static-valid` result and lock file deliberately keep `runtime_verified: false`. Neither a passing suite nor a discovered agent changes that claim. Combined-runtime reports separately record the outcome of each actual run.

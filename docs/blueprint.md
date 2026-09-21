@@ -1,5 +1,7 @@
 # OrchAtlas: proposta di prodotto e implementazione
 
+Aggiornamento v0.2.0: OrchAtlas coordina Codex e OpenCode nello stesso run autonomo, con un terminale interattivo. La proposta originale qui sotto è storica; l'architettura corrente e i suoi limiti sono descritti in [RUNTIME](RUNTIME.md).
+
 Data: 21 settembre 2026. Questo documento conserva la proposta di prodotto; il primo MVP ora implementa CLI, ricette e generazione/installazione per entrambi gli host. Per lo stato effettivo e i limiti vedere [MVP](MVP.md) e [validazione](VALIDATION.md). Baseline: [analisi della repo originale](research/astra-flash-analysis.md) e [ricerca sull'ecosistema](research/ecosystem.md).
 
 ## La promessa del prodotto
