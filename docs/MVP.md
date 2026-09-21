@@ -1,4 +1,4 @@
-# OrchAtlas 0.1.0
+# OrchAtlas 0.1.1
 
 This release implements a local recipe compiler and guarded installer for Codex and OpenCode. It creates native agents and a discoverable skill; the selected host executes the workflow after the user starts a session.
 
@@ -10,7 +10,7 @@ All commands accept `--json`. Project commands accept `--project PATH` after the
 | --- | --- |
 | `recipes [--catalog FILE]` | List bundled or local workflows |
 | `models [--host HOST]` | List documented model-ID examples |
-| `init [--host HOST] [--recipe ID@VERSION] [--set HOST.ROLE=MODEL]` | Create `orchatlas.json`; default host is both, recipe is lean |
+| `init [--host HOST] [--recipe ID@VERSION] [--set HOST.ROLE=MODEL]` | Create `orchatlas.json`; default host is both, recipe comes from the catalog (`astra-flash@0.1.0` bundled) |
 | `set HOST.ROLE MODEL [--effort LEVEL]` | Update a model choice |
 | `use ID@VERSION [--catalog FILE] [--with-models]` | Replace recipe snapshot; explicitly opt into its model defaults |
 | `validate` | Validate manifest and compile in memory |
@@ -23,7 +23,7 @@ No command sends model requests, installs a host, changes authentication, publis
 
 ## Model choices
 
-Each enabled host has `planner`, `builder` and `reviewer` settings. The reviewer remains in the manifest for lean but is inactive: the planner/coordinator reviews the result.
+Each enabled host has `planner`, `builder` and `reviewer` settings. The main team uses Astra for planner/reviewer and DeepSeek V4.1 Flash for builder; see [exact routes and prerequisites](teams/astra-flash.md). The reviewer remains in the manifest for lean but is inactive: the planner/coordinator reviews the result. The following illustrates custom choices, not the main-team defaults.
 
 ```json
 {
@@ -59,6 +59,8 @@ The shared skill is installed once under `.agents/skills/orchatlas`, supported b
 The manifest embeds a recipe snapshot. Updating the CLI/catalog does not change existing projects. `use` selects a new snapshot; `preview` shows its effect before `apply`.
 
 Catalogs are local JSON data. They can include model defaults per host/role, review ownership and correction rounds, but cannot inject arbitrary scripts into the compiler. New projects adopt defaults; `use` preserves existing selections unless `--with-models` is supplied. An omitted host then inherits its host defaults. This schema supports only `unbenchmarked` evidence; benchmark import and verified badges are not implemented.
+
+An optional top-level `default_recipe` must select an existing exact `id@version`. `init` uses it unless `--recipe` is supplied. Older catalogs without it retain the previous `lean` fallback. Changing the catalog default does not migrate existing manifests.
 
 ## Recovery and limits
 

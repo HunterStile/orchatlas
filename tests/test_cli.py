@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+import tomllib
 import tempfile
 import unittest
 from pathlib import Path
@@ -77,7 +78,7 @@ class CLITests(unittest.TestCase):
         self.assertEqual(self.cli("validate")["recipe"], "my-team@1.0.0")
 
     def test_recipe_model_defaults_require_explicit_adoption_on_update(self):
-        self.cli("init")
+        self.cli("init", "--recipe", "lean")
         catalog = str(ROOT / "examples/recipes.json")
         self.cli("use", "my-team@1.0.0", "--catalog", catalog)
         config = json.loads((self.project / "orchatlas.json").read_text())
@@ -86,6 +87,37 @@ class CLITests(unittest.TestCase):
         config = json.loads((self.project / "orchatlas.json").read_text())
         self.assertEqual(config["hosts"]["codex"]["builder"]["model"], "gpt-5.6-terra")
         self.assertEqual(config["hosts"]["opencode"]["builder"]["model"], "anthropic/claude-sonnet-4-5-20250929")
+
+    def test_main_team_uses_astra_for_planning_review_and_flash_for_writing(self):
+        self.assertEqual(self.cli("init")["recipe"], "astra-flash")
+        preview = self.cli("preview")
+        self.assertFalse(preview["runtime_verified"])
+        self.assertIn("--model gpt-6-astra", preview["launch"]["codex"])
+        self.assertTrue(any("provider/router" in warning for warning in preview["warnings"]))
+        self.cli("apply")
+        for role, model in (("builder", "deepseek/deepseek-v4.1-flash"), ("reviewer", "gpt-6-astra")):
+            agent = tomllib.loads((self.project / f".codex/agents/orchatlas_{role}.toml").read_text())
+            self.assertEqual(agent["model"], model)
+            self.assertEqual(agent["model_reasoning_effort"], "high")
+        for name, model in (("orchatlas", "openai/gpt-6-astra"),
+                            ("orchatlas-builder", "deepseek/deepseek-flash"),
+                            ("orchatlas-reviewer", "openai/gpt-6-astra")):
+            text = (self.project / f".opencode/agents/{name}.md").read_text()
+            header = text.split("---", 2)[1]
+            fields = {key: json.loads(value) for line in header.strip().splitlines()
+                      for key, value in [line.split(":", 1)]}
+            self.assertEqual(fields["model"], model)
+        self.assertEqual(self.cli("status")["pending_changes"], 0)
+
+    def test_catalog_default_can_change_without_migrating_existing_projects(self):
+        self.cli("init", "--recipe", "lean")
+        self.cli("set", "codex.builder", "custom/worker")
+        self.cli("use", "astra-flash@0.1.0")
+        path = self.project / "orchatlas.json"
+        self.assertEqual(json.loads(path.read_text())["hosts"]["codex"]["builder"]["model"], "custom/worker")
+        self.cli("use", "astra-flash@0.1.0", "--with-models")
+        config = json.loads(path.read_text())
+        self.assertEqual(config["hosts"]["codex"]["builder"]["model"], "deepseek/deepseek-v4.1-flash")
 
 
 if __name__ == "__main__":

@@ -49,7 +49,7 @@ def bundled(name: str) -> dict:
 
 def recipe_catalog(path: Path | None = None) -> dict:
     data = read_json(path) if path else bundled("recipes.json")
-    keys(data, {"schema_version", "catalog_version", "recipes"}, "recipe catalog")
+    keys(data, {"schema_version", "catalog_version", "default_recipe", "recipes"}, "recipe catalog")
     if type(data.get("schema_version")) is not int or data["schema_version"] != 1:
         raise AtlasError("Recipe catalog requires schema_version 1.")
     identifier(data.get("catalog_version"), "catalog_version")
@@ -62,6 +62,10 @@ def recipe_catalog(path: Path | None = None) -> dict:
         if identity in seen:
             raise AtlasError("Duplicate recipe id/version.")
         seen.add(identity)
+    if "default_recipe" in data:
+        default = data["default_recipe"]
+        if not isinstance(default, str) or default not in {f"{name}@{version}" for name, version in seen}:
+            raise AtlasError("default_recipe must name an existing exact id@version in the catalog.")
     return data
 
 
@@ -145,8 +149,10 @@ def validate_recipe(recipe: object) -> None:
         validate_hosts(recipe["models"])
 
 
-def new_config(recipe_id: str = "lean", hosts: tuple = HOSTS, catalog: dict | None = None) -> dict:
+def new_config(recipe_id: str | None = None, hosts: tuple = HOSTS, catalog: dict | None = None) -> dict:
     catalog = catalog or recipe_catalog()
+    if recipe_id is None:
+        recipe_id = catalog.get("default_recipe", "lean")
     name, separator, version = recipe_id.partition("@")
     matches = [r for r in catalog["recipes"] if r["id"] == name and (not separator or r["version"] == version)]
     if len(matches) != 1:

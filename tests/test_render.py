@@ -45,7 +45,7 @@ class RenderTests(unittest.TestCase):
         self.assertNotIn("bash", review["permission"])
 
     def test_lean_has_no_independent_reviewer(self):
-        outputs = render(new_config())
+        outputs = render(new_config("lean"))
         self.assertFalse(any("reviewer" in name for name in outputs))
         primary = frontmatter(outputs[".opencode/agents/orchatlas.md"])
         self.assertNotIn("orchatlas-reviewer", primary["permission"]["task"])

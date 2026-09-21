@@ -2,7 +2,9 @@
 
 Date: 2026-09-21. Local platform: Windows, Python 3.12.4.
 
-Local result: **43 tests passed**, no skips. The installed wheel also completed init → preview → apply → idempotent reapply → status outside the source checkout, generating nine files with no drift or pending changes.
+Local result for v0.1.1: **46 tests passed**, no skips. The installed v0.1.1 wheel completed default-team init → apply → status outside the source checkout, generating nine files with no drift or pending changes. The existing local demo was explicitly migrated to `astra-flash@0.1.0` with its model defaults and also has no drift or pending changes.
+
+The main-team tests check the Codex launch model, both hosts' builder/reviewer IDs, route warnings and explicit adoption of defaults without overwriting existing choices automatically. No inference calls are made.
 
 ## Offline behavior
 
@@ -13,6 +15,8 @@ The link-rejection test simulates a linked directory without requiring Windows s
 The generated skill passes the skill-creator `quick_validate.py` check. The PyYAML dependency used by that external validator was installed in a separate validation environment; it is not an OrchAtlas runtime dependency.
 
 ## Host configuration loading
+
+These diagnostics were recorded for v0.1.0. They have not been repeated as live task runs for the Astra/DeepSeek main team introduced in v0.1.1.
 
 | Host | Actual local observation | Not established |
 | --- | --- | --- |

@@ -10,13 +10,13 @@ from orchatlas.config import (AtlasError, new_config, read_json, recipe_catalog,
 
 class ConfigTests(unittest.TestCase):
     def test_starter_supports_both_hosts_and_discloses_inheritance(self):
-        config = new_config()
+        config = new_config("lean")
         self.assertEqual(set(config["hosts"]), {"codex", "opencode"})
         self.assertEqual(sum("not pinned" in warning for warning in validate(config)), 6)
 
     def test_recipe_snapshot_is_independent_of_catalog_edits(self):
         catalog = recipe_catalog()
-        config = new_config(catalog=catalog)
+        config = new_config("lean", catalog=catalog)
         catalog["recipes"][0]["max_fix_rounds"] = 5
         self.assertEqual(config["recipe"]["max_fix_rounds"], 1)
 
@@ -106,7 +106,7 @@ class ConfigTests(unittest.TestCase):
         team["codex"]["builder"] = {"model": "gpt-5.6-terra", "effort": "medium"}
         team["opencode"]["builder"] = {"model": "openai/gpt-5.2", "effort": "high"}
         catalog["recipes"][0]["models"] = team
-        config = new_config(catalog=catalog)
+        config = new_config("lean", catalog=catalog)
         self.assertEqual(config["hosts"], team)
         team["codex"]["builder"]["model"] = "changed"
         self.assertEqual(config["hosts"]["codex"]["builder"]["model"], "gpt-5.6-terra")
@@ -116,6 +116,19 @@ class ConfigTests(unittest.TestCase):
         config["recipe"]["models"] = {"opencode": {role: {"model": "bad"} for role in ("planner", "builder", "reviewer")}}
         with self.assertRaisesRegex(AtlasError, "provider/model"):
             validate(config)
+
+    def test_catalog_default_is_exact_and_legacy_catalog_keeps_lean(self):
+        catalog = recipe_catalog()
+        self.assertEqual(new_config(catalog=catalog)["recipe"]["id"], "astra-flash")
+        catalog.pop("default_recipe")
+        self.assertEqual(new_config(catalog=catalog)["recipe"]["id"], "lean")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "catalog.json"
+            for default in (None, "astra-flash", "astra-flash@missing"):
+                catalog["default_recipe"] = default
+                path.write_text(json.dumps(catalog), encoding="utf-8")
+                with self.subTest(default=default), self.assertRaisesRegex(AtlasError, "default_recipe"):
+                    recipe_catalog(path)
 
 
 if __name__ == "__main__":

@@ -41,9 +41,9 @@ def parser() -> argparse.ArgumentParser:
         if name in ("models", "init"):
             command.add_argument("--host", choices=(*HOSTS, "both"), default="both")
         if name == "init":
-            command.add_argument("--recipe", default="lean", help="recipe ID (default: lean)")
+            command.add_argument("--recipe", help="recipe ID (default: catalog default; bundled: astra-flash)")
             command.add_argument("--set", dest="selections", action="append", default=[], metavar="HOST.ROLE=MODEL",
-                                 help="repeat to choose models; otherwise inherit the host model")
+                                 help="repeat to override recipe model defaults")
         if name == "set":
             command.add_argument("role", help="host.role, for example codex.builder")
             command.add_argument("model", help="exact host model ID, or inherit")
@@ -160,6 +160,8 @@ def print_result(result: dict, as_json: bool) -> None:
         return
     if "recipes" in result:
         print(f"OrchAtlas recipes | catalog {result['catalog_version']}")
+        if "default_recipe" in result:
+            print(f"Default team: {result['default_recipe']}")
         for recipe in result["recipes"]:
             print(f"  {recipe['id']}@{recipe['version']}  {recipe['title']} [{recipe['evidence']}]")
             print(f"    {recipe['description']}")

@@ -6,6 +6,8 @@ Use Python 3.11+ and run `python -m unittest discover -s tests -v`. Runtime code
 
 Recipes live in `orchatlas/data/recipes.json`. Give each change to an existing recipe a new version and increment `catalog_version`. Keep historical versions if projects need to select them again. IDs with multiple versions require explicit `id@version` selection.
 
+Set the catalog's `default_recipe` to an existing exact `id@version` to choose the main team for new projects. It is currently `astra-flash@0.1.0`: Astra orchestrates and reviews, DeepSeek V4.1 Flash implements. Existing projects adopt changed models only with `use --with-models` followed by `apply`.
+
 The current schema supports `review: coordinator|independent` and `max_fix_rounds` from 0 to 5. Keep `evidence: unbenchmarked`; provenance checks for verification badges are not implemented. The bundled recipes are workflow starting points, not comparative model recommendations.
 
 A recipe may include a `models` object containing complete planner/builder/reviewer settings for each included host. See [the example catalog](examples/recipes.json). New projects adopt these defaults; existing projects retain their choices unless the user passes `use --with-models`. A host omitted from defaults uses inheritance when defaults are adopted.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — Astra / DeepSeek main team
+
+- Make `astra-flash@0.1.0` the default: GPT-6 Astra plans and reviews; DeepSeek V4.1 Flash implements.
+- Add explicit host-specific IDs and document the Codex Router prerequisite and mutable DeepSeek API alias.
+- Let maintainers choose `default_recipe` in their catalog without changing the CLI.
+- Preserve existing manifests and model choices until explicit adoption.
+
 ## 0.1.0 — Local configuration MVP
 
 - Add a dependency-free Python CLI for Codex and OpenCode.

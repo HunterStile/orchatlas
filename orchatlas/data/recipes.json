@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
-  "catalog_version": "2026.09.21.1",
+  "catalog_version": "2026.09.21.2",
+  "default_recipe": "astra-flash@0.1.0",
   "recipes": [
     {
       "id": "lean",
@@ -19,6 +20,27 @@
       "review": "independent",
       "max_fix_rounds": 2,
       "evidence": "unbenchmarked"
+    },
+    {
+      "id": "astra-flash",
+      "version": "0.1.0",
+      "title": "Astra orchestrates and reviews; DeepSeek implements",
+      "description": "Main team: GPT-6 Astra plans and reviews, while one DeepSeek V4.1 Flash builder writes and verifies the implementation. Codex requires an external router; live delegation is unverified.",
+      "review": "independent",
+      "max_fix_rounds": 2,
+      "evidence": "unbenchmarked",
+      "models": {
+        "codex": {
+          "planner": {"model": "gpt-6-astra", "effort": "high"},
+          "builder": {"model": "deepseek/deepseek-v4.1-flash", "effort": "high"},
+          "reviewer": {"model": "gpt-6-astra", "effort": "high"}
+        },
+        "opencode": {
+          "planner": {"model": "openai/gpt-6-astra", "effort": "high"},
+          "builder": {"model": "deepseek/deepseek-flash"},
+          "reviewer": {"model": "openai/gpt-6-astra", "effort": "high"}
+        }
+      }
     }
   ]
 }
