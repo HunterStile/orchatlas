@@ -21,6 +21,11 @@ classifiers = [
 [project.scripts]
 orchatlas = "orchatlas.cli:main"
 
+[project.urls]
+Repository = "https://github.com/HunterStile/orchatlas"
+Issues = "https://github.com/HunterStile/orchatlas/issues"
+Documentation = "https://github.com/HunterStile/orchatlas#readme"
+
 [tool.setuptools.packages.find]
 include = ["orchatlas*"]
 

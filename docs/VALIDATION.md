@@ -27,13 +27,13 @@ Both the default/inherited route and explicit model settings are tested at the g
 
 A `py3-none-any` wheel was built using the declared build backend. Its installed console command and packaged templates/catalogs are checked outside the source checkout.
 
-GitHub Actions is configured for Windows, Linux and macOS on Python 3.11 and 3.14. The workflow file alone is not execution evidence; consult the actual run on the public repository for its result.
+GitHub Actions passed all six jobs on Windows, Linux and macOS with Python 3.11 and 3.14: [initial public CI run](https://github.com/HunterStile/orchatlas/actions/runs/35642424500), commit `2d9bb95`. Each job runs the test suite, installs the package and checks the console entry point. This is offline compatibility evidence, not model execution evidence.
 
 ## Remaining acceptance work
 
 - Run a real implementation and review with recorded host/provider identity on each host.
 - Measure identical tasks across model teams, including failures and coordination cost.
 - Verify additional provider-specific effort mappings and account availability.
-- Expand real filesystem/platform evidence beyond the local environment.
+- Expand filesystem coverage for real symlinks, Windows reparse points and process interruption.
 
 The CLI's `static-valid` result and lock file deliberately keep `runtime_verified: false`. Neither a passing suite nor a discovered agent changes that claim.

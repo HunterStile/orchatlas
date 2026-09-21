@@ -9,4 +9,4 @@
 - Preview, apply, detect drift and undo project-local changes with guarded receipts.
 - Add lifecycle/rollback tests and report host-loading evidence separately from inference.
 
-No benchmark rankings, automated model calls or remote publication are included.
+No benchmark rankings, automated model calls or built-in remote publishing commands are included.

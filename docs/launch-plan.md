@@ -14,11 +14,11 @@ Una ricerca web esatta per `OrchAtlas` non ha restituito risultati. La ricerca G
 
 Descrizione proposta per GitHub:
 
-> Curated, versioned model teams for Codex and OpenCode. Choose your models, compare orchestration recipes, and track the evidence behind every recommendation.
+> Versioned orchestration recipes for Codex and OpenCode. Choose models per role, preview configuration changes, and roll back safely.
 
 Tagline proposta:
 
-> Choose your models. Follow a tested playbook.
+> Choose your models. Version your orchestration.
 
 Il ruolo pubblico del maintainer è riconoscibile: provare combinazioni, spiegare i risultati e mantenere raccomandazioni affidabili. La selezione dei modelli è una funzione; il motivo per tornare sul progetto è una storia verificabile di aggiornamenti utili.
 
@@ -33,7 +33,7 @@ Il ruolo pubblico del maintainer è riconoscibile: provare combinazioni, spiegar
 - Licenza del nuovo progetto e attribuzioni pertinenti a ogni parte riutilizzata.
 - Release numerata, changelog, risultati CI e artefatti riproducibili.
 
-Topics proposti per la release con entrambe le integrazioni verificate: `agent-orchestration`, `ai-agents`, `codex`, `opencode`, `developer-tools`, `model-routing`, `benchmarks`. Durante la fase di progettazione, il README chiarisce che il supporto è previsto e non ancora disponibile.
+Topics iniziali: `agent-orchestration`, `ai-agents`, `codex`, `opencode`, `developer-tools`, `model-routing`. Aggiungere `benchmarks` quando esistono misurazioni pubbliche. Il README distingue la generazione di configurazioni disponibile nel MVP dall'esecuzione reale ancora da verificare.
 
 ## Crescita basata sul progetto
 
@@ -43,4 +43,4 @@ Favorire contributi riproducibili: report di incompatibilità con versioni, task
 
 ## Stato della pubblicazione
 
-La cartella locale contiene analisi, proposta e un primo MVP funzionante di configurazione/installazione per entrambi gli host. Nessun repository remoto o pacchetto OrchAtlas è stato ancora pubblicato. Il nome dell'account GitHub di destinazione e i dettagli della release saranno risolti nel lavoro di pubblicazione.
+La repository pubblica è [HunterStile/orchatlas](https://github.com/HunterStile/orchatlas). Contiene analisi, proposta e un primo MVP di configurazione/installazione per entrambi gli host, con licenza MIT e CI su tre sistemi operativi. Gli artefatti numerati sono distribuiti tramite [GitHub releases](https://github.com/HunterStile/orchatlas/releases); non è stato pubblicato un pacchetto su PyPI. La v0.1.0 viene presentata come prerelease di configurazione, senza risultati di inferenza o benchmark.

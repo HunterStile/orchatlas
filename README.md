@@ -1,6 +1,8 @@
 # OrchAtlas
 
-**Choose your models. Follow a tested playbook.**
+[![Tests](https://github.com/HunterStile/orchatlas/actions/workflows/tests.yml/badge.svg)](https://github.com/HunterStile/orchatlas/actions/workflows/tests.yml)
+
+**Choose your models. Version your orchestration.**
 
 Versioned orchestration recipes for **Codex and OpenCode**. Choose the models for planning, building and reviewing, then generate the native agents and workflow for your project.
 
@@ -8,9 +10,11 @@ Versioned orchestration recipes for **Codex and OpenCode**. Choose the models fo
 
 ## Try it
 
-From this repository:
+Clone the repository, then try the CLI without installing dependencies:
 
 ```sh
+git clone https://github.com/HunterStile/orchatlas.git
+cd orchatlas
 python -m orchatlas recipes
 python -m orchatlas models
 mkdir ../orchatlas-demo
@@ -29,6 +33,8 @@ orchatlas --help
 ```
 
 The installed `orchatlas` and `python -m orchatlas` expose the same interface. There is no published PyPI package or remote installer in this release.
+
+Versioned wheels are available from [GitHub releases](https://github.com/HunterStile/orchatlas/releases). Download a wheel and install its local path with `python -m pip install path/to/orchatlas-0.1.0-py3-none-any.whl`.
 
 ## Choose your models
 
