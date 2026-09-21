@@ -1,0 +1,3 @@
+"""OrchAtlas: local configuration tools, with no inference client."""
+
+__version__ = "0.1.0"

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "catalog_version": "2026.09.21.1",
+  "recipes": [
+    {
+      "id": "lean",
+      "version": "0.1.0",
+      "title": "Plan, build, accept",
+      "description": "The coordinator plans and reviews; one builder owns implementation and tests.",
+      "review": "coordinator",
+      "max_fix_rounds": 1,
+      "evidence": "unbenchmarked"
+    },
+    {
+      "id": "reviewed",
+      "version": "0.1.0",
+      "title": "Plan, build, independent review",
+      "description": "One builder implements; a separate read-only reviewer checks the patch before coordinator acceptance.",
+      "review": "independent",
+      "max_fix_rounds": 2,
+      "evidence": "unbenchmarked"
+    }
+  ]
+}
